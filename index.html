@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Generator for App Store Updates</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">РЕЛИЗ МАШИНА</h1>
+            <p class="text-gray-600">для App Store Connect MCP-сервера</p>
+            
+            <!-- Step Indicator -->
+            <div class="flex justify-center items-center mt-6 space-x-4">
+                <div id="step1Indicator" class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">1</div>
+                    <span class="ml-2 text-sm font-medium text-gray-700">Создание версии</span>
+                </div>
+                <div class="w-8 h-0.5 bg-gray-300"></div>
+                <div id="step2Indicator" class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
+                    <span class="ml-2 text-sm font-medium text-gray-500">Загрузка скриншотов</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Step 1: Version Creation Form -->
+        <div id="step1Form" class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Шаг 1: Создание версии и локалей</h2>
+            <form id="promptForm" onsubmit="event.preventDefault(); generateStep1();">
+                <!-- Bundle ID -->
+                <div class="mb-6">
+                    <label for="bundleId" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Bundle ID <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="bundleId" 
+                        value="com.juliangomez.argueforgearena"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="com.example.app"
+                        required
+                    >
+                </div>
+
+                <!-- Gray Locales -->
+                <div class="mb-6">
+                    <label for="grayLocales" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Серые локали (без перевода keywords)
+                    </label>
+                    <textarea 
+                        id="grayLocales" 
+                        rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-y"
+                        placeholder="Italian, German, Spanish (Spain), ..."
+                    >Italian, German, Spanish (Spain), Catalan, French (France), Portuguese (Portugal), Dutch</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Разделяйте запятыми или переносами строк</p>
+                </div>
+
+                <!-- White Locales -->
+                <div class="mb-6">
+                    <label for="whiteLocales" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Белые локали (с переводом keywords)
+                    </label>
+                    <textarea 
+                        id="whiteLocales" 
+                        rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-y"
+                        placeholder="Czech, Swedish, Vietnamese, ..."
+                    >Czech, Swedish, Vietnamese, Turkish, Hindi, Korean, Japanese, Thai, Indonesian, Japanese</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Разделяйте запятыми или переносами строк</p>
+                </div>
+
+                <!-- Generate Button -->
+                <button 
+                    type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                >
+                    Generate Prompt
+                </button>
+            </form>
+        </div>
+
+        <!-- Step 2: Screenshots Upload Form -->
+        <div id="step2Form" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Шаг 2: Загрузка скриншотов</h2>
+            <form id="screenshotsForm" onsubmit="event.preventDefault(); generateStep2();">
+                <!-- Screenshot Count -->
+                <div class="mb-6">
+                    <label for="screenshotCount" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Количество скриншотов <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        id="screenshotCount" 
+                        value="6"
+                        min="1"
+                        max="10"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="6"
+                        required
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Укажите количество скриншотов (например: 6 для файлов 1.jpg - 6.jpg)</p>
+                </div>
+
+                <!-- Gray Mockups Path -->
+                <div class="mb-6">
+                    <label for="grayMockupsPath" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Серые мокапы (Gray Theme) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="grayMockupsPath" 
+                        value="/Users/antonkasian/Documents/iGapps/Мокапы/New mockup/Utilities770/gray"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="/path/to/gray/mockups"
+                        list="grayMockupsPathSuggestions"
+                        autocomplete="off"
+                        required
+                    >
+                    <datalist id="grayMockupsPathSuggestions"></datalist>
+                    <p class="text-xs text-gray-500 mt-1">Для локалей: <span id="grayLocalesDisplay" class="font-medium"></span></p>
+                </div>
+
+                <!-- White Mockups Path -->
+                <div class="mb-6">
+                    <label for="whiteMockupsPath" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Белые мокапы (White Theme) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="whiteMockupsPath" 
+                        value="/Users/antonkasian/Documents/iGapps/Мокапы/New mockup/Utilities770/white"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="/path/to/white/mockups"
+                        list="whiteMockupsPathSuggestions"
+                        autocomplete="off"
+                        required
+                    >
+                    <datalist id="whiteMockupsPathSuggestions"></datalist>
+                    <p class="text-xs text-gray-500 mt-1">Для остальных локалей</p>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex space-x-4">
+                    <button 
+                        type="button"
+                        onclick="goToStep(1)"
+                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                    >
+                        ← Back
+                    </button>
+                    <button 
+                        type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                    >
+                        Generate Prompt
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Output Section -->
+        <div id="outputSection" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Сгенерированный промпт</h2>
+                <div class="flex space-x-2">
+                    <button 
+                        onclick="copyToClipboard()"
+                        id="copyBtn"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                    >
+                        Copy to Clipboard
+                    </button>
+                    <button 
+                        onclick="goToNextStep()"
+                        id="nextBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg hidden"
+                    >
+                        Next →
+                    </button>
+                </div>
+            </div>
+            <textarea 
+                id="output" 
+                rows="20"
+                readonly
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm resize-y focus:outline-none"
+            ></textarea>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mt-4" role="alert">
+            <strong class="font-bold">Ошибка!</strong>
+            <span class="block sm:inline" id="errorText"></span>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let formData = {};
+
+        function processLocales(text) {
+            if (!text || text.trim() === '') {
+                return '';
+            }
+            
+            // Split by comma or newline, trim each item, filter empty
+            const locales = text
+                .split(/[,\n]/)
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
+            
+            return locales.join(', ');
+        }
+
+        function processLocalesList(text) {
+            if (!text || text.trim() === '') {
+                return [];
+            }
+            
+            return text
+                .split(/[,\n]/)
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            
+            // Hide all forms
+            document.getElementById('step1Form').classList.add('hidden');
+            document.getElementById('step2Form').classList.add('hidden');
+            document.getElementById('outputSection').classList.add('hidden');
+            
+            // Update step indicators
+            const step1Indicator = document.getElementById('step1Indicator');
+            const step2Indicator = document.getElementById('step2Indicator');
+            
+            if (step === 1) {
+                step1Indicator.querySelector('div').className = 'w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold';
+                step1Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-gray-700';
+                step2Indicator.querySelector('div').className = 'w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold';
+                step2Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-gray-500';
+                document.getElementById('step1Form').classList.remove('hidden');
+            } else if (step === 2) {
+                step1Indicator.querySelector('div').className = 'w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold';
+                step1Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-gray-700';
+                step2Indicator.querySelector('div').className = 'w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold';
+                step2Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-gray-700';
+                document.getElementById('step2Form').classList.remove('hidden');
+                
+                // Update gray locales display
+                const grayLocales = processLocales(formData.grayLocales || '');
+                document.getElementById('grayLocalesDisplay').textContent = grayLocales || 'не указаны';
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToNextStep() {
+            if (currentStep === 1) {
+                goToStep(2);
+            }
+        }
+
+        function generateStep1() {
+            // Hide error message
+            document.getElementById('errorMessage').classList.add('hidden');
+            
+            // Get values
+            const bundleId = document.getElementById('bundleId').value.trim();
+            const grayLocalesRaw = document.getElementById('grayLocales').value;
+            const whiteLocalesRaw = document.getElementById('whiteLocales').value;
+            
+            // Validate Bundle ID
+            if (!bundleId) {
+                showError('Bundle ID обязателен для заполнения!');
+                return;
+            }
+            
+            // Save form data
+            formData.bundleId = bundleId;
+            formData.grayLocales = grayLocalesRaw;
+            formData.whiteLocales = whiteLocalesRaw;
+            
+            // Process locales
+            const grayLocales = processLocales(grayLocalesRaw);
+            const whiteLocales = processLocales(whiteLocalesRaw);
+            
+            // Build the prompt
+            let prompt = `У меня настроен и работает App Store Connect MCP-сервер (asc-mcp), статус зелёный, все ключи (ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY) заполнены правильно.
+Мне нужно внести следующие изменения в App Store Connect для приложения (bundle ID: ${bundleId} — уточни у меня если нужно).
+Выполняй ВСЕ действия ТОЛЬКО через App Store Connect MCP-сервер, шаг за шагом, не придумывай команды вручную. После каждого важного шага показывай, что получилось (ответ сервера).
+Задача разбита на этапы — выполняй строго по порядку:
+
+Создать новую версию приложения — версия 1.1 (build number оставь автоматическим или следующий доступный)
+В разделе "What's New in This Version" (для версии 1.1) добавить текст (на английском, потом переведём):
+"Minor update
+• Bug fixes and stability improvements
+• Small performance optimizations
+• Minor UI tweaks and fixes
+• General improvements for a smoother experience"
+Подчеркни, что это минорное обновление, сосредоточенное на исправлении ошибок и небольших улучшениях.
+В App Information → Marketing URL: скопировать значение из поля "Support URL" / "Contact form URL" (продублировать одну и ту же ссылку в оба поля)
+Сохранить все изменения на этом этапе (submit version changes)
+Добавить следующие новые локали (если их ещё нет):`;
+
+            // Add gray locales if present
+            if (grayLocales) {
+                prompt += `\n${grayLocales}`;
+            }
+            
+            // Add white locales if present
+            if (whiteLocales) {
+                if (grayLocales) {
+                    prompt += `, ${whiteLocales}`;
+                } else {
+                    prompt += `\n${whiteLocales}`;
+                }
+            }
+
+            prompt += `
+Для каждой новой локали сразу:
+Перевести и заполнить описание (description) на соответствующий язык локали
+Перевести и заполнить keywords на соответствующий язык локали (Используй 3 keywords)`;
+
+            // Add "НЕ переводи keywords" only if gray locales exist
+            if (grayLocales) {
+                prompt += `
+НЕ переводи keywords на локалях: ${grayLocales}`;
+            }
+
+            prompt += `
+
+Сохранить изменения после заполнения всех новых локалей
+После всех изменений:
+Сохранить всё
+Показать мне финальное состояние версии 1.1 (какие локали добавлены, какие тайтлы/сабтайтлы изменены, что в What's New)
+Если потребуется — подготовить версию к отправке на review (но НЕ отправляй автоматически, только подготовь)
+Действуй строго последовательно, шаг за шагом.
+После каждого крупного действия (создание версии, добавление локалей, изменение тайтлов и т.д.) показывай ответ от MCP-сервера или подтверждение.
+Если где-то нужна дополнительная информация от меня (bundle ID, текущий app ID в App Store Connect, точный текст для перевода и т.д.) — спроси.
+Начинай с шага 1 — создание версии 1.1`;
+
+            // Display output
+            document.getElementById('output').value = prompt;
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('nextBtn').classList.remove('hidden');
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function generateStep2() {
+            // Hide error message
+            document.getElementById('errorMessage').classList.add('hidden');
+            
+            // Get values
+            const screenshotCount = document.getElementById('screenshotCount').value.trim();
+            const grayPath = document.getElementById('grayMockupsPath').value.trim();
+            const whitePath = document.getElementById('whiteMockupsPath').value.trim();
+            
+            // Validate
+            if (!screenshotCount || !grayPath || !whitePath) {
+                showError('Все поля обязательны для заполнения!');
+                return;
+            }
+            
+            // Process locales
+            const grayLocales = processLocales(formData.grayLocales || '');
+            const grayLocalesList = processLocalesList(formData.grayLocales || '');
+            
+            // Build the prompt
+            let prompt = `У меня настроен и работает App Store Connect MCP-сервер (asc-mcp), статус зелёный.
+
+Сейчас я хочу полностью заменить все скриншоты (mockups / screenshots) в версии 1.1 приложения только для указанных локалей.
+
+Важное требование: скриншоты в каждой папке пронумерованы от 1 до ${screenshotCount} (например: 1.jpg, 2.jpg, 3.jpg, 4.jpg`;
+            
+            if (parseInt(screenshotCount) > 4) {
+                for (let i = 5; i <= parseInt(screenshotCount); i++) {
+                    prompt += `, ${i}.jpg`;
+                }
+            }
+            
+            prompt += `)
+Загружай их **строго последовательно по номерам**:
+- Скриншот 1 → первый слот в App Store Connect (обычно основной / самый верхний)
+- Скриншот 2 → второй слот
+- Скриншот 3 → третий слот`;
+
+            if (parseInt(screenshotCount) > 3) {
+                for (let i = 4; i <= parseInt(screenshotCount); i++) {
+                    prompt += `\n- Скриншот ${i} → ${i === 4 ? 'четвертый' : i === 5 ? 'пятый' : i === 6 ? 'шестой' : i + '-й'} слот`;
+                }
+            }
+
+            prompt += `
+
+Не перемешивай порядок, не выбирай случайные файлы — строго по возрастанию номера.
+
+Разделить по группам локалей:
+`;
+
+            // Add gray locales group
+            if (grayLocales) {
+                prompt += `
+Группа 1 (серые мокапы / gray theme):`;
+                grayLocalesList.forEach(locale => {
+                    prompt += `\n${locale}`;
+                });
+                
+                prompt += `
+
+Для этих локалей загружать скриншоты из папки:
+"${grayPath}"
+(файлы 1.jpg–${screenshotCount}.jpg или аналогично пронумерованные)
+`;
+            }
+
+            prompt += `
+Группа 2 (белые мокапы / white theme):
+Для всех остальных локалей
+
+Для этих локалей загружать скриншоты из папки:
+"${whitePath}"
+(файлы 1.jpg–${screenshotCount}.jpg или аналогично пронумерованные)
+
+Требования к загрузке:
+- Загружать скриншоты для 6.5"
+- После замены скриншотов НЕ меняй другие поля (description, keywords, title, subtitle и т.д.) — только скриншоты
+
+Действуй шаг за шагом:
+1. Сначала покажи мне список текущих скриншотов в версии 1.1 для этих локалей (чтобы я увидел, что будет заменено)
+2. Загрузи новые скриншоты из соответствующих папок — строго по номерам от 1 до ${screenshotCount} для каждого устройства/локали
+3. После загрузки подтверди успех: сколько скриншотов загружено, для каких локалей и устройств, и в каком порядке (1–${screenshotCount})
+
+Если Cursor не может читать локальные файлы напрямую — попроси меня загрузить скриншоты в чат или дать публичные URL на них.
+
+Если нужно уточнить bundle ID приложения, app ID в App Store Connect, точные имена файлов или как именно названы скриншоты в папках — спроси меня.
+
+Начинай с шага 1 — покажи текущие скриншоты в версии 1.1 для перечисленных локалей.`;
+
+            // Display output
+            document.getElementById('output').value = prompt;
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            // Copy to clipboard
+            output.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            copyBtn.classList.add('bg-green-800');
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.classList.remove('bg-green-800');
+                copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            }, 2000);
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            
+            // Scroll to error
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Build file tree structure from files
+        function buildFileTree(files) {
+            const tree = {};
+            let rootPath = '';
+
+            // Process all files to build tree structure
+            for (let file of files) {
+                if (file.webkitRelativePath) {
+                    const parts = file.webkitRelativePath.split('/');
+                    if (!rootPath && parts.length > 0) {
+                        rootPath = parts[0]; // First part is usually the root folder name
+                    }
+                    
+                    let current = tree;
+                    for (let i = 0; i < parts.length; i++) {
+                        const part = parts[i];
+                        if (!current[part]) {
+                            current[part] = i === parts.length - 1 ? { _file: file } : {};
+                        }
+                        current = current[part];
+                    }
+                }
+            }
+
+            return { tree, rootPath };
+        }
+
+        // Render file tree with indentation
+        function renderFileTree(tree, container, indent = 0) {
+            let html = '';
+
+            const sortedKeys = Object.keys(tree).sort((a, b) => {
+                const aIsFile = tree[a]._file ? 1 : 0;
+                const bIsFile = tree[b]._file ? 1 : 0;
+                if (aIsFile !== bIsFile) return aIsFile - bIsFile;
+                return a.localeCompare(b);
+            });
+
+            for (let key of sortedKeys) {
+                if (key === '_file') continue;
+                
+                const isFile = tree[key]._file ? true : false;
+                const icon = isFile ? '📄' : '📁';
+                const indentPx = indent * 20;
+                const isRoot = indent === 0;
+                
+                html += `<div class="py-0.5 flex items-center ${isRoot ? 'font-semibold text-gray-800' : 'text-gray-600'}" style="padding-left: ${indentPx}px;">
+                    <span class="mr-1">${icon}</span>
+                    <span>${key}</span>
+                </div>`;
+                
+                if (!isFile) {
+                    html += renderFileTree(tree[key], container, indent + 1);
+                }
+            }
+
+            return html;
+        }
+
+        // Get full path from webkitRelativePath - improved version
+        function extractFullPath(files) {
+            if (!files || files.length === 0) return '';
+
+            const firstFile = files[0];
+            
+            // Method 1: Use file.path property if available (works when dragging from Finder on Mac)
+            if (firstFile.path && firstFile.webkitRelativePath) {
+                const fullFilePath = firstFile.path;
+                const relativePath = firstFile.webkitRelativePath;
+                
+                // Remove filename from both paths
+                const fullPathWithoutFile = fullFilePath.substring(0, fullFilePath.lastIndexOf('/'));
+                const relativePathWithoutFile = relativePath.substring(0, relativePath.lastIndexOf('/'));
+                
+                // Calculate depth of relative path (how many folders deep)
+                const relativeDepth = relativePathWithoutFile.split('/').filter(p => p).length;
+                
+                // Split full path and go up relativeDepth levels
+                const fullPathParts = fullPathWithoutFile.split('/').filter(p => p);
+                
+                if (fullPathParts.length >= relativeDepth) {
+                    const rootPathParts = fullPathParts.slice(0, fullPathParts.length - relativeDepth);
+                    return '/' + rootPathParts.join('/');
+                }
+                
+                // Alternative: try to find root folder by name matching
+                const rootFolderName = relativePath.split('/')[0];
+                const rootIndex = fullPathParts.lastIndexOf(rootFolderName);
+                if (rootIndex !== -1) {
+                    return '/' + fullPathParts.slice(0, rootIndex + 1).join('/');
+                }
+            }
+            
+            // Method 2: Try multiple files to find common base path
+            if (files.length > 1) {
+                const filesWithPaths = files.filter(f => f.path && f.webkitRelativePath);
+                
+                if (filesWithPaths.length > 0) {
+                    let commonBasePath = null;
+                    
+                    for (let file of filesWithPaths) {
+                        const fullFilePath = file.path;
+                        const relativePath = file.webkitRelativePath;
+                        
+                        // Remove filename
+                        const fullPathWithoutFile = fullFilePath.substring(0, fullFilePath.lastIndexOf('/'));
+                        const relativePathWithoutFile = relativePath.substring(0, relativePath.lastIndexOf('/'));
+                        const relativeDepth = relativePathWithoutFile.split('/').filter(p => p).length;
+                        
+                        const fullPathParts = fullPathWithoutFile.split('/').filter(p => p);
+                        
+                        if (fullPathParts.length >= relativeDepth) {
+                            const basePath = '/' + fullPathParts.slice(0, fullPathParts.length - relativeDepth).join('/');
+                            
+                            if (!commonBasePath) {
+                                commonBasePath = basePath;
+                            } else {
+                                // Find longest common prefix
+                                const baseParts = commonBasePath.split('/').filter(p => p);
+                                const currentParts = basePath.split('/').filter(p => p);
+                                const commonParts = [];
+                                
+                                for (let i = 0; i < Math.min(baseParts.length, currentParts.length); i++) {
+                                    if (baseParts[i] === currentParts[i]) {
+                                        commonParts.push(baseParts[i]);
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                
+                                if (commonParts.length > 0) {
+                                    commonBasePath = '/' + commonParts.join('/');
+                                } else {
+                                    commonBasePath = '';
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (commonBasePath && commonBasePath.length > 1) {
+                        return commonBasePath;
+                    }
+                }
+            }
+
+            return '';
+        }
+
+        // Save directory handle to localStorage for future use
+        function saveDirectoryHandle(type, directoryHandle) {
+            try {
+                // We can't serialize directoryHandle directly, but we can save permission
+                // The actual handle will be requested again, but browser will remember the permission
+                localStorage.setItem(`lastFolder_${type}`, directoryHandle.name);
+            } catch (e) {
+                console.log('Could not save directory handle:', e);
+            }
+        }
+
+        // Get saved directory handle name
+        function getSavedDirectoryHandle(type) {
+            try {
+                return localStorage.getItem(`lastFolder_${type}`);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Select folder using File System Access API - IMPROVED VERSION
+        async function selectFolder(type) {
+            try {
+                if ('showDirectoryPicker' in window) {
+                    // Try to use saved directory handle if available
+                    let directoryHandle;
+                    const savedFolderName = getSavedDirectoryHandle(type);
+                    
+                    // Request directory picker
+                    directoryHandle = await window.showDirectoryPicker({
+                        // Optionally start in the last used directory
+                        startIn: 'documents' // or 'downloads', 'desktop', etc.
+                    });
+                    
+                    // Save the handle for future reference
+                    saveDirectoryHandle(type, directoryHandle);
+                    
+                    // Get all files from directory recursively
+                    const files = [];
+                    async function readDirectory(dirHandle, path = '') {
+                        for await (const entry of dirHandle.values()) {
+                            const entryPath = path ? `${path}/${entry.name}` : entry.name;
+                            if (entry.kind === 'file') {
+                                const file = await entry.getFile();
+                                file.webkitRelativePath = entryPath;
+                                // Try to get path if available
+                                if (entry.fullPath) {
+                                    file.path = entry.fullPath;
+                                }
+                                files.push(file);
+                            } else if (entry.kind === 'directory') {
+                                await readDirectory(entry, entryPath);
+                            }
+                        }
+                    }
+                    
+                    await readDirectory(directoryHandle);
+                    
+                    // Process files
+                    if (files.length > 0) {
+                        const inputElement = document.getElementById(`${type}MockupsPath`);
+                        const fileTreeElement = document.getElementById(`${type}FileTree`);
+                        const dropZoneContent = document.getElementById(`${type}DropZoneContent`);
+                        
+                        // Build and render tree
+                        const { tree } = buildFileTree(files);
+                        const treeHtml = renderFileTree(tree, fileTreeElement);
+                        fileTreeElement.innerHTML = treeHtml;
+                        fileTreeElement.classList.remove('hidden');
+                        dropZoneContent.classList.add('hidden');
+                        
+                        // Try to get full path using multiple methods
+                        let fullPathValue = '';
+                        
+                        // Method 1: Try extractFullPath function
+                        fullPathValue = extractFullPath(files);
+                        console.log('selectFolder - method 1 (extractFullPath):', fullPathValue);
+                        
+                        // Method 2: Try to get from file.path property
+                        if (!fullPathValue || fullPathValue.length < 3) {
+                            for (let file of files) {
+                                if (file.path && file.webkitRelativePath) {
+                                    const fullFilePath = file.path;
+                                    const relativePath = file.webkitRelativePath;
+                                    
+                                    // Normalize paths
+                                    const fullPathNormalized = fullFilePath.replace(/\\/g, '/');
+                                    const relativePathNormalized = relativePath.replace(/\\/g, '/');
+                                    
+                                    // Remove filename from both
+                                    const fullDirPath = fullPathNormalized.substring(0, fullPathNormalized.lastIndexOf('/'));
+                                    const relativeDirPath = relativePathNormalized.substring(0, relativePathNormalized.lastIndexOf('/'));
+                                    
+                                    // Calculate depth
+                                    const relativeDepth = relativeDirPath.split('/').filter(p => p && p !== '.').length;
+                                    const fullDirParts = fullDirPath.split('/').filter(p => p && p !== '.');
+                                    
+                                    if (fullDirParts.length >= relativeDepth) {
+                                        const rootParts = fullDirParts.slice(0, fullDirParts.length - relativeDepth);
+                                        fullPathValue = '/' + rootParts.join('/');
+                                        console.log('selectFolder - method 2 (file.path):', fullPathValue);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Method 3: Try to construct from directory handle name and common paths
+                        if (!fullPathValue || fullPathValue.length < 3) {
+                            // Try common macOS paths
+                            const commonPaths = [
+                                '/Users',
+                                '/Users/' + (process?.env?.USER || ''),
+                                process?.env?.HOME || '',
+                                '/Users/' + (navigator.userAgent.includes('Mac') ? 'antonkasian' : '')
+                            ].filter(p => p);
+                            
+                            const folderName = directoryHandle.name;
+                            
+                            // Try to find folder in common paths
+                            for (let basePath of commonPaths) {
+                                if (basePath) {
+                                    // This is a heuristic - we can't actually check if folder exists
+                                    // But we can suggest the most likely path
+                                    const suggestedPath = basePath + '/Documents/iGapps/Мокапы/New mockup';
+                                    if (suggestedPath.includes(folderName) || folderName.includes('gray') || folderName.includes('white')) {
+                                        // This looks like it might be the right path
+                                        fullPathValue = suggestedPath + '/' + folderName;
+                                        console.log('selectFolder - method 3 (heuristic):', fullPathValue);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // If we still don't have a good path, show helpful message
+                        if (!fullPathValue || fullPathValue.length < 3) {
+                            // Create a more helpful UI
+                            const hintContainer = document.createElement('div');
+                            hintContainer.className = 'mt-2 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-300 rounded-lg';
+                            hintContainer.innerHTML = `
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <h3 class="text-sm font-medium text-blue-800">Путь к папке выбран</h3>
+                                        <div class="mt-2 text-sm text-blue-700">
+                                            <p>Папка "<strong>${directoryHandle.name}</strong>" выбрана успешно. Пожалуйста, введите полный путь к этой папке в поле ниже.</p>
+                                            <p class="mt-1 text-xs text-blue-600">💡 Совет: Скопируйте путь из Finder (Cmd+Option+C) и вставьте сюда.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Remove any existing hints
+                            const existingHints = inputElement.parentElement.querySelectorAll('.bg-gradient-to-r');
+                            existingHints.forEach(h => h.remove());
+                            
+                            inputElement.parentElement.appendChild(hintContainer);
+                            
+                            // Focus on input field
+                            inputElement.focus();
+                            inputElement.select();
+                            
+                            // Set directory name as starting point
+                            fullPathValue = directoryHandle.name;
+                        } else {
+                            // Success! Remove any existing hints
+                            const existingHints = inputElement.parentElement.querySelectorAll('.bg-gradient-to-r, .bg-blue-100, .bg-yellow-100');
+                            existingHints.forEach(h => h.remove());
+                        }
+                        
+                        inputElement.value = fullPathValue;
+                        console.log('selectFolder - final path set to:', fullPathValue);
+                        
+                        // Save the path to localStorage for autocomplete
+                        if (fullPathValue && fullPathValue.length > 3) {
+                            try {
+                                const savedPaths = JSON.parse(localStorage.getItem('savedPaths') || '[]');
+                                if (!savedPaths.includes(fullPathValue)) {
+                                    savedPaths.unshift(fullPathValue);
+                                    // Keep only last 10 paths
+                                    if (savedPaths.length > 10) {
+                                        savedPaths.pop();
+                                    }
+                                    localStorage.setItem('savedPaths', JSON.stringify(savedPaths));
+                                    updateDatalist(type, fullPathValue);
+                                }
+                            } catch (e) {
+                                console.log('Could not save path:', e);
+                            }
+                        }
+                    }
+                } else {
+                    alert('File System Access API не поддерживается в вашем браузере.\n\nРекомендуется использовать Chrome, Edge или другой современный браузер.\n\nИли введите путь вручную в поле ниже.');
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Error selecting folder:', error);
+                    alert('Ошибка при выборе папки: ' + error.message);
+                }
+            }
+        }
+
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            const grayDropZone = document.getElementById('grayDropZone');
+            const whiteDropZone = document.getElementById('whiteDropZone');
+            const grayInput = document.getElementById('grayMockupsPath');
+            const whiteInput = document.getElementById('whiteMockupsPath');
+            const grayFileTree = document.getElementById('grayFileTree');
+            const whiteFileTree = document.getElementById('whiteFileTree');
+            const grayDropZoneContent = document.getElementById('grayDropZoneContent');
+            const whiteDropZoneContent = document.getElementById('whiteDropZoneContent');
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+            }
+
+            function handleDragLeave(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+            }
+
+            async function handleDrop(e, inputElement, fileTreeElement, dropZoneContent) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+
+                const files = Array.from(e.dataTransfer.files);
+                
+                if (files.length === 0) {
+                    // Try legacy method with DataTransferItemList
+                    const items = e.dataTransfer.items;
+                    if (items && items.length > 0) {
+                        const item = items[0];
+                        if (item.kind === 'file') {
+                            const entry = item.webkitGetAsEntry();
+                            if (entry && entry.isDirectory) {
+                                // Try to read directory recursively
+                                const dirFiles = [];
+                                async function readDir(dirEntry, path = '') {
+                                    const reader = dirEntry.createReader();
+                                    const entries = await new Promise((resolve) => {
+                                        reader.readEntries(resolve);
+                                    });
+                                    
+                                    for (let entry of entries) {
+                                        const entryPath = path ? `${path}/${entry.name}` : entry.name;
+                                        if (entry.isFile) {
+                                            const file = await new Promise((resolve) => {
+                                                entry.file(resolve);
+                                            });
+                                            file.webkitRelativePath = entryPath;
+                                            dirFiles.push(file);
+                                        } else if (entry.isDirectory) {
+                                            await readDir(entry, entryPath);
+                                        }
+                                    }
+                                }
+                                
+                                await readDir(entry);
+                                
+                                if (dirFiles.length > 0) {
+                                    files.push(...dirFiles);
+                                } else {
+                                    inputElement.value = entry.fullPath || entry.name;
+                                    return;
+                                }
+                            } else if (entry && entry.isFile) {
+                                const file = await new Promise((resolve) => {
+                                    entry.file(resolve);
+                                });
+                                files.push(file);
+                            }
+                        }
+                    }
+                    
+                    if (files.length === 0) {
+                        return;
+                    }
+                }
+
+                // Check if files have webkitRelativePath (indicates folder drop)
+                const hasRelativePaths = files.some(f => f.webkitRelativePath);
+                
+                if (hasRelativePaths) {
+                    // Build file tree
+                    const { tree, rootPath } = buildFileTree(files);
+                    
+                    // Render tree
+                    const treeHtml = renderFileTree(tree, fileTreeElement);
+                    fileTreeElement.innerHTML = treeHtml;
+                    fileTreeElement.classList.remove('hidden');
+                    dropZoneContent.classList.add('hidden');
+                    
+                    // Try to get full path - improved method
+                    let fullPath = '';
+                    
+                    // Debug: log file information
+                    console.log('=== DROP EVENT DEBUG ===');
+                    console.log('Files dropped:', files.length);
+                    if (files[0]) {
+                        console.log('First file object:', files[0]);
+                        console.log('First file path:', files[0].path);
+                        console.log('First file webkitPath:', files[0].webkitPath);
+                        console.log('First file mozFullPath:', files[0].mozFullPath);
+                        console.log('First file webkitRelativePath:', files[0].webkitRelativePath);
+                        console.log('First file name:', files[0].name);
+                        console.log('All file properties:', Object.keys(files[0]));
+                    }
+                    console.log('Root path from buildFileTree:', rootPath);
+                    
+                    // Method 1: Try extractFullPath function
+                    fullPath = extractFullPath(files);
+                    console.log('Extracted path (method 1):', fullPath);
+                    
+                    // Method 2: Direct extraction from file.path if available - SIMPLIFIED
+                    if (!fullPath || fullPath === rootPath || fullPath.length < 3) {
+                        const firstFile = files[0];
+                        
+                        // Check if path property exists and get it
+                        let filePath = null;
+                        if (firstFile.path) {
+                            filePath = firstFile.path;
+                        } else if (firstFile.webkitPath) {
+                            filePath = firstFile.webkitPath;
+                        } else if (firstFile.mozFullPath) {
+                            filePath = firstFile.mozFullPath;
+                        }
+                        
+                        if (filePath && firstFile.webkitRelativePath) {
+                            // Handle file:// URL format
+                            if (filePath.startsWith('file://')) {
+                                filePath = decodeURIComponent(filePath.replace('file://', ''));
+                            }
+                            
+                            // We have both full path and relative path - calculate root DIRECTLY
+                            const fullFilePath = filePath;
+                            const relativePath = firstFile.webkitRelativePath;
+                            
+                            // Ensure paths are normalized
+                            const fullPathNormalized = fullFilePath.replace(/\\/g, '/');
+                            const relativePathNormalized = relativePath.replace(/\\/g, '/');
+                            
+                            // Remove filename from both
+                            const fullDirPath = fullPathNormalized.substring(0, fullPathNormalized.lastIndexOf('/'));
+                            const relativeDirPath = relativePathNormalized.substring(0, relativePathNormalized.lastIndexOf('/'));
+                            
+                            // Count directory depth in relative path
+                            const relativeDepth = relativeDirPath.split('/').filter(p => p && p !== '.').length;
+                            
+                            // Split full directory path
+                            let fullDirParts = fullDirPath.split('/').filter(p => p && p !== '.');
+                            
+                            // Ensure we start with / if it's an absolute path
+                            if (fullDirPath.startsWith('/')) {
+                                fullDirParts = ['', ...fullDirParts];
+                            }
+                            
+                            // Go up relativeDepth levels
+                            if (fullDirParts.length > relativeDepth) {
+                                const rootParts = fullDirParts.slice(0, fullDirParts.length - relativeDepth);
+                                fullPath = rootParts.join('/') || '/';
+                                if (!fullPath.startsWith('/') && rootParts[0] !== '') {
+                                    fullPath = '/' + fullPath;
+                                }
+                                console.log('Extracted path (method 2):', fullPath);
+                            }
+                            
+                            // If still not good, try matching by root folder name
+                            if (!fullPath || fullPath.length < 3 || fullPath === '/') {
+                                const rootFolderName = relativePathNormalized.split('/')[0];
+                                const rootIndex = fullDirParts.lastIndexOf(rootFolderName);
+                                if (rootIndex !== -1) {
+                                    const rootParts = fullDirParts.slice(0, rootIndex + 1);
+                                    fullPath = rootParts.join('/') || '/';
+                                    if (!fullPath.startsWith('/') && rootParts[0] !== '') {
+                                        fullPath = '/' + fullPath;
+                                    }
+                                    console.log('Extracted path (method 2b):', fullPath);
+                                }
+                            }
+                        } else if (filePath) {
+                            // Only have path, extract directory
+                            let pathNormalized = filePath;
+                            if (pathNormalized.startsWith('file://')) {
+                                pathNormalized = decodeURIComponent(pathNormalized.replace('file://', ''));
+                            }
+                            pathNormalized = pathNormalized.replace(/\\/g, '/');
+                            const pathParts = pathNormalized.split('/').filter(p => p && p !== '.');
+                            pathParts.pop(); // Remove filename
+                            
+                            if (pathParts.length > 0) {
+                                fullPath = '/' + pathParts.join('/');
+                                console.log('Extracted path (method 2c):', fullPath);
+                            }
+                        }
+                    }
+                    
+                    // Method 3: Try to get from entry.fullPath if available (from webkitGetAsEntry)
+                    if ((!fullPath || fullPath === rootPath || fullPath.length < 3) && e.dataTransfer.items) {
+                        const items = Array.from(e.dataTransfer.items);
+                        for (let item of items) {
+                            if (item.kind === 'file') {
+                                try {
+                                    const entry = item.webkitGetAsEntry();
+                                    if (entry) {
+                                        // Try fullPath property
+                                        if (entry.fullPath && entry.fullPath.startsWith('/')) {
+                                            // If it's a directory, use it directly
+                                            if (entry.isDirectory) {
+                                                fullPath = entry.fullPath;
+                                                console.log('Extracted path (method 3a):', fullPath);
+                                                break;
+                                            } else {
+                                                // If it's a file, get parent directory
+                                                const pathParts = entry.fullPath.split('/');
+                                                pathParts.pop();
+                                                fullPath = pathParts.join('/') || '/';
+                                                console.log('Extracted path (method 3b):', fullPath);
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // Try to get path from entry's filesystem
+                                        if (entry.filesystem && entry.filesystem.root) {
+                                            // This is more complex and may not work in all browsers
+                                            console.log('Entry filesystem available');
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.log('Error accessing entry:', err);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Method 4: Try multiple files to find common base
+                    if ((!fullPath || fullPath === rootPath || fullPath.length < 3) && files.length > 1) {
+                        const pathsWithFullPath = files.filter(f => f.path && f.webkitRelativePath);
+                        if (pathsWithFullPath.length > 0) {
+                            // Try to find common base path
+                            let commonParts = null;
+                            for (let file of pathsWithFullPath) {
+                                const filePath = file.path;
+                                const relativePath = file.webkitRelativePath;
+                                const relativeDepth = relativePath.split('/').length - 1;
+                                const pathParts = filePath.split('/');
+                                
+                                if (pathParts.length > relativeDepth) {
+                                    const baseParts = pathParts.slice(0, pathParts.length - relativeDepth);
+                                    if (!commonParts) {
+                                        commonParts = baseParts;
+                                    } else {
+                                        // Find common prefix
+                                        const newCommonParts = [];
+                                        for (let i = 0; i < Math.min(commonParts.length, baseParts.length); i++) {
+                                            if (commonParts[i] === baseParts[i]) {
+                                                newCommonParts.push(commonParts[i]);
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        commonParts = newCommonParts;
+                                    }
+                                }
+                            }
+                            
+                            if (commonParts && commonParts.length > 0) {
+                                fullPath = commonParts.join('/');
+                            }
+                        }
+                    }
+                    
+                    // Fallback: use root folder name if nothing else works
+                    if (!fullPath || fullPath === rootPath || fullPath.length < 3) {
+                        fullPath = rootPath || (files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : '');
+                        
+                        // If we only got folder name, show warning
+                        if (fullPath && fullPath.length < 10 && !fullPath.startsWith('/')) {
+                            console.warn('Could not extract full path. Browser security restrictions may prevent access to full file paths.');
+                            console.warn('Please use the "Выбрать папку" button or enter the path manually.');
+                            
+                            // Show a visual hint
+                            const hint = document.createElement('div');
+                            hint.className = 'mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-xs';
+                            hint.innerHTML = '⚠️ Не удалось автоматически определить полный путь. Используйте кнопку "Выбрать папку" или введите путь вручную.';
+                            inputElement.parentElement.appendChild(hint);
+                            
+                            // Remove hint after 5 seconds
+                            setTimeout(() => {
+                                if (hint.parentElement) {
+                                    hint.parentElement.removeChild(hint);
+                                }
+                            }, 5000);
+                        }
+                    }
+                    
+                    // Update input with full path
+                    if (fullPath) {
+                        inputElement.value = fullPath;
+                        console.log('Final path set to:', fullPath);
+                    }
+                } else {
+                    // Single file or no relative paths
+                    const firstFile = files[0];
+                    if (firstFile.path) {
+                        const pathParts = firstFile.path.split('/');
+                        pathParts.pop();
+                        inputElement.value = pathParts.join('/');
+                    } else {
+                        inputElement.value = firstFile.name;
+                    }
+                }
+            }
+
+            grayDropZone.addEventListener('dragover', handleDragOver);
+            grayDropZone.addEventListener('dragleave', handleDragLeave);
+            grayDropZone.addEventListener('drop', (e) => handleDrop(e, grayInput, grayFileTree, grayDropZoneContent));
+
+            whiteDropZone.addEventListener('dragover', handleDragOver);
+            whiteDropZone.addEventListener('dragleave', handleDragLeave);
+            whiteDropZone.addEventListener('drop', (e) => handleDrop(e, whiteInput, whiteFileTree, whiteDropZoneContent));
+        }
+
+        // Load saved paths into datalist for autocomplete
+        function loadSavedPaths() {
+            try {
+                const savedPaths = JSON.parse(localStorage.getItem('savedPaths') || '[]');
+                
+                const grayDatalist = document.getElementById('grayMockupsPathSuggestions');
+                const whiteDatalist = document.getElementById('whiteMockupsPathSuggestions');
+                
+                // Filter paths for gray and white
+                const grayPaths = savedPaths.filter(p => p.includes('gray') || p.includes('Gray'));
+                const whitePaths = savedPaths.filter(p => p.includes('white') || p.includes('White'));
+                
+                // Add all paths if no specific matches
+                if (grayPaths.length === 0) grayPaths.push(...savedPaths);
+                if (whitePaths.length === 0) whitePaths.push(...savedPaths);
+                
+                // Populate datalists
+                grayPaths.forEach(path => {
+                    const option = document.createElement('option');
+                    option.value = path;
+                    grayDatalist.appendChild(option);
+                });
+                
+                whitePaths.forEach(path => {
+                    const option = document.createElement('option');
+                    option.value = path;
+                    whiteDatalist.appendChild(option);
+                });
+            } catch (e) {
+                console.log('Could not load saved paths:', e);
+            }
+        }
+
+        // Update datalist when path is saved
+        function updateDatalist(type, newPath) {
+            try {
+                const datalistId = type === 'gray' ? 'grayMockupsPathSuggestions' : 'whiteMockupsPathSuggestions';
+                const datalist = document.getElementById(datalistId);
+                
+                // Check if option already exists
+                const exists = Array.from(datalist.options).some(opt => opt.value === newPath);
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = newPath;
+                    datalist.insertBefore(option, datalist.firstChild);
+                    
+                    // Keep only last 10 options
+                    while (datalist.options.length > 10) {
+                        datalist.removeChild(datalist.lastChild);
+                    }
+                }
+            } catch (e) {
+                console.log('Could not update datalist:', e);
+            }
+        }
+
+        // Improve drag-and-drop message
+        function improveDropZoneMessage(dropZone, type) {
+            const dropZoneContent = dropZone.querySelector(`#${type}DropZoneContent`);
+            if (dropZoneContent) {
+                const originalText = dropZoneContent.querySelector('p.text-sm');
+                if (originalText) {
+                    originalText.innerHTML = `
+                        Перетащите папку с ${type === 'gray' ? 'серыми' : 'белыми'} скриншотами сюда
+                        <br><span class="text-xs text-gray-500 mt-1 block">💡 Рекомендуется использовать кнопку "Выбрать папку" ниже для лучшей работы</span>
+                    `;
+                }
+            }
+        }
+
+        // Save path when user manually enters it
+        function setupPathInputHandlers() {
+            const grayInput = document.getElementById('grayMockupsPath');
+            const whiteInput = document.getElementById('whiteMockupsPath');
+            
+            function savePathOnBlur(input, type) {
+                input.addEventListener('blur', function() {
+                    const path = this.value.trim();
+                    if (path && path.length > 3 && path.startsWith('/')) {
+                        try {
+                            const savedPaths = JSON.parse(localStorage.getItem('savedPaths') || '[]');
+                            if (!savedPaths.includes(path)) {
+                                savedPaths.unshift(path);
+                                if (savedPaths.length > 10) {
+                                    savedPaths.pop();
+                                }
+                                localStorage.setItem('savedPaths', JSON.stringify(savedPaths));
+                                updateDatalist(type, path);
+                            }
+                        } catch (e) {
+                            console.log('Could not save path:', e);
+                        }
+                    }
+                });
+            }
+            
+            if (grayInput) savePathOnBlur(grayInput, 'gray');
+            if (whiteInput) savePathOnBlur(whiteInput, 'white');
+        }
+
+        // Initialize drag and drop on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop();
+            loadSavedPaths();
+            setupPathInputHandlers();
+            
+            // Improve drop zone messages
+            const grayDropZone = document.getElementById('grayDropZone');
+            const whiteDropZone = document.getElementById('whiteDropZone');
+            if (grayDropZone) improveDropZoneMessage(grayDropZone, 'gray');
+            if (whiteDropZone) improveDropZoneMessage(whiteDropZone, 'white');
+        });
+    </script>
+</body>
+</html>
