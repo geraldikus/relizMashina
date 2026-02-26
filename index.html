@@ -74,6 +74,32 @@
                     <p class="text-xs text-gray-500 mt-1">Разделяйте запятыми или переносами строк</p>
                 </div>
 
+                <!-- Gray Name (for App Information) -->
+                <div class="mb-6">
+                    <label for="grayName" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Name для серых локалей
+                    </label>
+                    <input 
+                        type="text" 
+                        id="grayName" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Название приложения для серых локалей"
+                    >
+                </div>
+
+                <!-- Gray Subtitle (for App Information) -->
+                <div class="mb-6">
+                    <label for="graySubtitle" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Subtitle для серых локалей
+                    </label>
+                    <input 
+                        type="text" 
+                        id="graySubtitle" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Подзаголовок для серых локалей"
+                    >
+                </div>
+
                 <!-- Generate Button -->
                 <button 
                     type="submit"
@@ -88,14 +114,14 @@
         <div id="step2Form" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Шаг 2: Загрузка скриншотов</h2>
             <form id="screenshotsForm" onsubmit="event.preventDefault(); generateStep2();">
-                <!-- Screenshot Count -->
+                <!-- Gray Screenshot Count -->
                 <div class="mb-6">
-                    <label for="screenshotCount" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Количество скриншотов <span class="text-red-500">*</span>
+                    <label for="grayScreenshotCount" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Количество скриншотов (серые мокапы) <span class="text-red-500">*</span>
                     </label>
                     <input 
                         type="number" 
-                        id="screenshotCount" 
+                        id="grayScreenshotCount" 
                         value="6"
                         min="1"
                         max="10"
@@ -103,7 +129,25 @@
                         placeholder="6"
                         required
                     >
-                    <p class="text-xs text-gray-500 mt-1">Укажите количество скриншотов (например: 6 для файлов 1.jpg - 6.jpg)</p>
+                    <p class="text-xs text-gray-500 mt-1">Файлы 1.jpg … N.jpg в папке серых мокапов</p>
+                </div>
+
+                <!-- White Screenshot Count -->
+                <div class="mb-6">
+                    <label for="whiteScreenshotCount" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Количество скриншотов (белые мокапы) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        id="whiteScreenshotCount" 
+                        value="6"
+                        min="1"
+                        max="10"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="6"
+                        required
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Файлы 1.jpg … N.jpg в папке белых мокапов</p>
                 </div>
 
                 <!-- Gray Mockups Path -->
@@ -276,6 +320,8 @@
             const bundleId = document.getElementById('bundleId').value.trim();
             const grayLocalesRaw = document.getElementById('grayLocales').value;
             const whiteLocalesRaw = document.getElementById('whiteLocales').value;
+            const grayName = document.getElementById('grayName').value.trim();
+            const graySubtitle = document.getElementById('graySubtitle').value.trim();
             
             // Validate Bundle ID
             if (!bundleId) {
@@ -287,6 +333,8 @@
             formData.bundleId = bundleId;
             formData.grayLocales = grayLocalesRaw;
             formData.whiteLocales = whiteLocalesRaw;
+            formData.grayName = grayName;
+            formData.graySubtitle = graySubtitle;
             
             // Process locales
             const grayLocales = processLocales(grayLocalesRaw);
@@ -337,7 +385,26 @@
 
             prompt += `
 
-Сохранить изменения после заполнения всех новых локалей
+Сохранить изменения после заполнения всех новых локалей.`;
+
+            // App Information: Name and Subtitle
+            prompt += `
+
+Вкладка App Information — Name и Subtitle:
+- Для всех **белых** локалей: поле Name изменить на **переведённое текущее название**. Текущее название — то, что указано в локали US (English). Переведи его на язык каждой белой локали и вставь в Name для этой локали.
+- Для всех **серых** локалей:`;
+            if (grayName && graySubtitle) {
+                prompt += ` заполнить Name и Subtitle заданными значениями: Name = "${grayName}". Subtitle = "${graySubtitle}".`;
+            } else if (grayName) {
+                prompt += ` заполнить Name заданным значением: Name = "${grayName}".`;
+            } else if (graySubtitle) {
+                prompt += ` заполнить Subtitle заданным значением: Subtitle = "${graySubtitle}".`;
+            } else {
+                prompt += ` значения Name и Subtitle уточни у пользователя.`;
+            }
+
+            prompt += `
+
 После всех изменений:
 Сохранить всё
 Показать мне финальное состояние версии 1.1 (какие локали добавлены, какие тайтлы/сабтайтлы изменены, что в What's New)
@@ -361,12 +428,13 @@
             document.getElementById('errorMessage').classList.add('hidden');
             
             // Get values
-            const screenshotCount = document.getElementById('screenshotCount').value.trim();
+            const grayScreenshotCount = document.getElementById('grayScreenshotCount').value.trim();
+            const whiteScreenshotCount = document.getElementById('whiteScreenshotCount').value.trim();
             const grayPath = document.getElementById('grayMockupsPath').value.trim();
             const whitePath = document.getElementById('whiteMockupsPath').value.trim();
             
             // Validate
-            if (!screenshotCount || !grayPath || !whitePath) {
+            if (!grayScreenshotCount || !whiteScreenshotCount || !grayPath || !whitePath) {
                 showError('Все поля обязательны для заполнения!');
                 return;
             }
@@ -380,29 +448,7 @@
 
 Сейчас я хочу полностью заменить все скриншоты (mockups / screenshots) в версии 1.1 приложения только для указанных локалей.
 
-Важное требование: скриншоты в каждой папке пронумерованы от 1 до ${screenshotCount} (например: 1.jpg, 2.jpg, 3.jpg, 4.jpg`;
-            
-            if (parseInt(screenshotCount) > 4) {
-                for (let i = 5; i <= parseInt(screenshotCount); i++) {
-                    prompt += `, ${i}.jpg`;
-                }
-            }
-            
-            prompt += `)
-Загружай их **строго последовательно по номерам**:
-- Скриншот 1 → первый слот в App Store Connect (обычно основной / самый верхний)
-- Скриншот 2 → второй слот
-- Скриншот 3 → третий слот`;
-
-            if (parseInt(screenshotCount) > 3) {
-                for (let i = 4; i <= parseInt(screenshotCount); i++) {
-                    prompt += `\n- Скриншот ${i} → ${i === 4 ? 'четвертый' : i === 5 ? 'пятый' : i === 6 ? 'шестой' : i + '-й'} слот`;
-                }
-            }
-
-            prompt += `
-
-Не перемешивай порядок, не выбирай случайные файлы — строго по возрастанию номера.
+Загружай скриншоты **строго последовательно по номерам**. Количество слотов разное для серых и белых локалей.
 
 Разделить по группам локалей:
 `;
@@ -419,7 +465,7 @@
 
 Для этих локалей загружать скриншоты из папки:
 "${grayPath}"
-(файлы 1.jpg–${screenshotCount}.jpg или аналогично пронумерованные)
+Скриншоты пронумерованы от 1 до ${grayScreenshotCount} (файлы 1.jpg–${grayScreenshotCount}.jpg). Загружай строго по номерам: скриншот 1 → первый слот, скриншот 2 → второй слот и т.д. до ${grayScreenshotCount}-го слота.
 `;
             }
 
@@ -429,7 +475,9 @@
 
 Для этих локалей загружать скриншоты из папки:
 "${whitePath}"
-(файлы 1.jpg–${screenshotCount}.jpg или аналогично пронумерованные)
+Скриншоты пронумерованы от 1 до ${whiteScreenshotCount} (файлы 1.jpg–${whiteScreenshotCount}.jpg). Загружай строго по номерам: скриншот 1 → первый слот, скриншот 2 → второй слот и т.д. до ${whiteScreenshotCount}-го слота.
+
+Не перемешивай порядок, не выбирай случайные файлы — строго по возрастанию номера.
 
 Требования к загрузке:
 - Загружать скриншоты для 6.5"
@@ -437,8 +485,8 @@
 
 Действуй шаг за шагом:
 1. Сначала покажи мне список текущих скриншотов в версии 1.1 для этих локалей (чтобы я увидел, что будет заменено)
-2. Загрузи новые скриншоты из соответствующих папок — строго по номерам от 1 до ${screenshotCount} для каждого устройства/локали
-3. После загрузки подтверди успех: сколько скриншотов загружено, для каких локалей и устройств, и в каком порядке (1–${screenshotCount})
+2. Загрузи новые скриншоты из соответствующих папок: для серых локалей — строго по номерам 1–${grayScreenshotCount}, для белых локалей — строго по номерам 1–${whiteScreenshotCount}
+3. После загрузки подтверди успех: сколько скриншотов загружено для серых локалей (1–${grayScreenshotCount}), сколько для белых (1–${whiteScreenshotCount}), для каких локалей и устройств
 
 Если Cursor не может читать локальные файлы напрямую — попроси меня загрузить скриншоты в чат или дать публичные URL на них.
 
