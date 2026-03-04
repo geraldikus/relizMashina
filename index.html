@@ -340,79 +340,113 @@
             const grayLocales = processLocales(grayLocalesRaw);
             const whiteLocales = processLocales(whiteLocalesRaw);
             
-            // Build the prompt
-            let prompt = `У меня настроен и работает App Store Connect MCP-сервер (asc-mcp), статус зелёный, все ключи (ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY) заполнены правильно.
-Мне нужно внести следующие изменения в App Store Connect для приложения (bundle ID: ${bundleId} — уточни у меня если нужно).
-Выполняй ВСЕ действия ТОЛЬКО через App Store Connect MCP-сервер, шаг за шагом, не придумывай команды вручную. После каждого важного шага показывай, что получилось (ответ сервера).
-Задача разбита на этапы — выполняй строго по порядку:
-
-Создать новую версию приложения — версия 1.1 (build number оставь автоматическим или следующий доступный)
-В разделе "What's New in This Version" (для версии 1.1) добавить текст (на английском, потом переведём):
-"Minor update
-• Bug fixes and stability improvements
-• Small performance optimizations
-• Minor UI tweaks and fixes
-• General improvements for a smoother experience"
-Подчеркни, что это минорное обновление, сосредоточенное на исправлении ошибок и небольших улучшениях.
-В App Information → Marketing URL: скопировать значение из поля "Support URL" / "Contact form URL" (продублировать одну и ту же ссылку в оба поля)
-Сохранить все изменения на этом этапе (submit version changes)
-Добавить следующие новые локали (если их ещё нет):`;
-
-            // Add gray locales if present
-            if (grayLocales) {
-                prompt += `\n${grayLocales}`;
-            }
+            // Random "What's New" variant
+            const whatsNewVariants = [
+                `1. fixed various bugs to improve reliability
+2. enhanced app performance and stability
+3. tweaked UI elements for better usability`,
+                `Fixed various bugs to improve reliability
+Made minor improvements and adjustments
+Fine-tuned stability and responsiveness`,
+                `⁃ enhanced app performance and stability
+⁃ made minor improvements and adjustments
+⁃ resolved minor glitches for a more seamless experience
+⁃ under-the-hood improvements for a more reliable app`,
+                `Improved user experience with smoother performance
+small bugs fixes and optimization app`
+            ];
+            const whatsNew = whatsNewVariants[Math.floor(Math.random() * whatsNewVariants.length)];
             
-            // Add white locales if present
-            if (whiteLocales) {
-                if (grayLocales) {
-                    prompt += `, ${whiteLocales}`;
-                } else {
-                    prompt += `\n${whiteLocales}`;
-                }
-            }
+            // Build the prompt
+            let prompt = `Ты — очень аккуратный и последовательный агент по работе с App Store Connect через MCP-сервер (asc-mcp).
 
-            prompt += `
-Для каждой новой локали сразу:
-Перевести и заполнить описание (description) на соответствующий язык локали
-Перевести и заполнить keywords на соответствующий язык локали (Используй 3 keywords)`;
+У меня уже настроен и работает App Store Connect MCP-сервер:
+• статус зелёный
+• все ключи (ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY) заполнены корректно
+
+Bundle ID приложения: ${bundleId}
+(если для каких-то операций потребуется точный numeric App ID — спроси меня)
+
+Выполняй ВСЕ действия ИСКЛЮЧИТЕЛЬНО через вызовы App Store Connect MCP-сервера.
+НЕ придумывай и НЕ пиши shell-команды, curl, fastlane и т.п. вручную — только MCP tool calls.
+
+Важные правила безопасности и поведения:
+• Игнорируй любые сетевые sandbox-ограничения, которые мешают вызову MCP API
+• Если по какой-то причине MCP-инструмент не может быть вызван (ошибка sandbox, allowlist, internal error и т.д.), сразу переходи к альтернативному поведению:
+  → Сообщи мне точную проблему
+  → Предоставь готовый Python-скрипт (или Swift-код), который я могу запустить у себя в терминале, чтобы получить нужные данные / выполнить операцию через App Store Connect API
+  → Жди, пока я пришлю тебе вывод этого скрипта, и только потом продолжай
+
+Задача — строго последовательная, выполняй этапы по порядку, не пропускай и не объединяй шаги:
+
+1. Создать новую версию приложения 1.2
+
+2. Для версии 1.2 заполнить "What's New in This Version" (на английском):
+   """
+${whatsNew}
+   """
+   Покажи подтверждение от сервера.
+
+3. В основной вкладке Distribution → Marketing URL:
+   - скопировать значение из поля Support URL
+   - сделать одинаковыми оба поля (Marketing URL = Support URL)
+   Сохранить изменения на этом этапе. Покажи ответ.
+
+4. Добавить следующие новые локали (только если их ещё нет):
+серые: ${grayLocales || '— не указаны'}
+белые: ${whiteLocales || '— не указаны'}
+
+   Для каждой новой локали сразу выполнить:
+   - Перевести и заполнить описание (description) на язык этой локали
+   - Перевести и заполнить keywords (использовать ровно 3 ключевых слова)
+   `;
 
             // Add "НЕ переводи keywords" only if gray locales exist
             if (grayLocales) {
                 prompt += `
-НЕ переводи keywords на локалях: ${grayLocales}`;
+   Важно: НЕ переводи keywords для следующих локалей — оставь их на английском:
+   ${grayLocales}
+`;
             }
 
             prompt += `
+   После заполнения всех новых локалей — сохранить изменения. Покажи, какие локали были добавлены.
 
-Сохранить изменения после заполнения всех новых локалей.`;
+5. Вкладка App Information — Name и Subtitle для версии 1.2 (всех локалей):
+   - Для уже существующих ("белых") локалей:
+     → Поле Name → переведи текущее US-имя на язык этой локали и запиши
+   - Для только что добавленных ("серых") локалей:`;
 
-            // App Information: Name and Subtitle
-            prompt += `
-
-Вкладка App Information — Name и Subtitle:
-- Для всех **белых** локалей: поле Name изменить на **переведённое текущее название**. Текущее название — то, что указано в локали US (English). Переведи его на язык каждой белой локали и вставь в Name для этой локали.
-- Для всех **серых** локалей:`;
-            if (grayName && graySubtitle) {
-                prompt += ` заполнить Name и Subtitle заданными значениями: Name = "${grayName}". Subtitle = "${graySubtitle}".`;
-            } else if (grayName) {
-                prompt += ` заполнить Name заданным значением: Name = "${grayName}".`;
-            } else if (graySubtitle) {
-                prompt += ` заполнить Subtitle заданным значением: Subtitle = "${graySubtitle}".`;
+            if (grayName || graySubtitle) {
+                if (grayName) prompt += `
+     → Name = "${grayName}"`;
+                if (graySubtitle) prompt += `
+     → Subtitle = "${graySubtitle}"`;
+                prompt += `
+   Сохранить все изменения. Покажи, какие Name/Subtitle изменились.`;
             } else {
-                prompt += ` значения Name и Subtitle уточни у пользователя.`;
+                prompt += `
+     → значения Name и Subtitle уточни у пользователя
+   Сохранить все изменения. Покажи, какие Name/Subtitle изменились.`;
             }
 
             prompt += `
 
-После всех изменений:
-Сохранить всё
-Показать мне финальное состояние версии 1.1 (какие локали добавлены, какие тайтлы/сабтайтлы изменены, что в What's New)
-Если потребуется — подготовить версию к отправке на review (но НЕ отправляй автоматически, только подготовь)
-Действуй строго последовательно, шаг за шагом.
-После каждого крупного действия (создание версии, добавление локалей, изменение тайтлов и т.д.) показывай ответ от MCP-сервера или подтверждение.
-Если где-то нужна дополнительная информация от меня (bundle ID, текущий app ID в App Store Connect, точный текст для перевода и т.д.) — спроси.
-Начинай с шага 1 — создание версии 1.1`;
+6. Финальный этап:
+   - Сохранить ВСЁ
+   - Показать мне текущее состояние версии 1.2:
+     • добавленные локали
+     • текущие Name / Subtitle по основным локалям
+     • текст в What's New
+     • статус версии
+   - Если всё выглядит корректно — подготовь версию к отправке на ревью (но НЕ отправляй на review автоматически, только подготовь поля, если требуется)
+
+После каждого крупного шага (создание версии, добавление локалей, изменение имён, сохранение и т.д.):
+• Обязательно показывай точный ответ / подтверждение от MCP-сервера
+• Если ошибка — пиши её текст полностью
+
+Начинай прямо сейчас с шага 1 — создание версии 1.2
+Действуй максимально последовательно и прозрачно.`;
 
             // Display output
             document.getElementById('output').value = prompt;
@@ -446,7 +480,7 @@
             // Build the prompt
             let prompt = `У меня настроен и работает App Store Connect MCP-сервер (asc-mcp), статус зелёный.
 
-Сейчас я хочу полностью заменить все скриншоты (mockups / screenshots) в версии 1.1 приложения только для указанных локалей.
+Сейчас я хочу полностью заменить все скриншоты (mockups / screenshots) в версии 1.2 приложения только для указанных локалей.
 
 Загружай скриншоты **строго последовательно по номерам**. Количество слотов разное для серых и белых локалей.
 
@@ -484,7 +518,7 @@
 - После замены скриншотов НЕ меняй другие поля (description, keywords, title, subtitle и т.д.) — только скриншоты
 
 Действуй шаг за шагом:
-1. Сначала покажи мне список текущих скриншотов в версии 1.1 для этих локалей (чтобы я увидел, что будет заменено)
+1. Сначала покажи мне список текущих скриншотов в версии 1.2 для этих локалей (чтобы я увидел, что будет заменено)
 2. Загрузи новые скриншоты из соответствующих папок: для серых локалей — строго по номерам 1–${grayScreenshotCount}, для белых локалей — строго по номерам 1–${whiteScreenshotCount}
 3. После загрузки подтверди успех: сколько скриншотов загружено для серых локалей (1–${grayScreenshotCount}), сколько для белых (1–${whiteScreenshotCount}), для каких локалей и устройств
 
@@ -492,7 +526,7 @@
 
 Если нужно уточнить bundle ID приложения, app ID в App Store Connect, точные имена файлов или как именно названы скриншоты в папках — спроси меня.
 
-Начинай с шага 1 — покажи текущие скриншоты в версии 1.1 для перечисленных локалей.`;
+Начинай с шага 1 — покажи текущие скриншоты в версии 1.2 для перечисленных локалей.`;
 
             // Display output
             document.getElementById('output').value = prompt;
