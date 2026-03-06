@@ -377,12 +377,6 @@ Bundle ID приложения: ${bundleId}
   → Предоставь готовый Python-скрипт (или Swift-код), который я могу запустить у себя в терминале, чтобы получить нужные данные / выполнить операцию через App Store Connect API
   → Жди, пока я пришлю тебе вывод этого скрипта, и только потом продолжай
 
-Технические правила для работы с локалями и API:
-• Использовать полные коды локалей: de-DE, nl-NL, es-ES, fr-FR, pt-PT, en-US (не de, nl, es и т.п.).
-• Для версии в статусе PREPARE_FOR_SUBMISSION — брать App Info с appStoreState = PREPARE_FOR_SUBMISSION (list_app_infos по appId, затем list_app_info_localizations по нужному appInfoId).
-• Если при create_version_localization ошибка "not listed for localization" — пробовать региональный код (de-DE вместо de, nl-NL вместо nl).
-• Если при create ошибка "already exists" — вызывать update_version_localization по найденному localizationId.
-
 Задача — строго последовательная, выполняй этапы по порядку, не пропускай и не объединяй шаги:
 
 1. Создать новую версию приложения 1.2
