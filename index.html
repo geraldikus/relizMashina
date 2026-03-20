@@ -46,6 +46,21 @@
                     >
                 </div>
 
+                <!-- Version -->
+                <div class="mb-6">
+                    <label for="version" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Версия приложения <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="version" 
+                        value="1.2"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="1.2"
+                        required
+                    >
+                </div>
+
                 <!-- Gray Locales -->
                 <div class="mb-6">
                     <label for="grayLocales" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -318,19 +333,25 @@
             
             // Get values
             const bundleId = document.getElementById('bundleId').value.trim();
+            const version = document.getElementById('version').value.trim();
             const grayLocalesRaw = document.getElementById('grayLocales').value;
             const whiteLocalesRaw = document.getElementById('whiteLocales').value;
             const grayName = document.getElementById('grayName').value.trim();
             const graySubtitle = document.getElementById('graySubtitle').value.trim();
             
-            // Validate Bundle ID
+            // Validate
             if (!bundleId) {
                 showError('Bundle ID обязателен для заполнения!');
+                return;
+            }
+            if (!version) {
+                showError('Версия обязательна для заполнения!');
                 return;
             }
             
             // Save form data
             formData.bundleId = bundleId;
+            formData.version = version;
             formData.grayLocales = grayLocalesRaw;
             formData.whiteLocales = whiteLocalesRaw;
             formData.grayName = grayName;
@@ -358,94 +379,106 @@ small bugs fixes and optimization app`
             const whatsNew = whatsNewVariants[Math.floor(Math.random() * whatsNewVariants.length)];
             
             // Build the prompt
-            let prompt = `Ты — очень аккуратный и последовательный агент по работе с App Store Connect через MCP-сервер (asc-mcp).
+            let prompt = `Роль
+Ты — очень аккуратный и последовательный агент по работе с App Store Connect через MCP-сервер (asc-mcp).
 
+Контекст
 У меня уже настроен и работает App Store Connect MCP-сервер:
 • статус зелёный
 • все ключи (ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY) заполнены корректно
 
-Bundle ID приложения: ${bundleId}
+Опирайся на правила из app-store-connect-asc-mcp.mdc
+
+Параметры
+• Bundle ID: ${bundleId}
+• Версия: ${version}
 (если для каких-то операций потребуется точный numeric App ID — спроси меня)
 
-Выполняй ВСЕ действия ИСКЛЮЧИТЕЛЬНО через вызовы App Store Connect MCP-сервера.
-НЕ придумывай и НЕ пиши shell-команды, curl, fastlane и т.п. вручную — только MCP tool calls.
-
-Важные правила безопасности и поведения:
+Правила
+• Выполняй ВСЕ действия ИСКЛЮЧИТЕЛЬНО через вызовы App Store Connect MCP-сервера
+• НЕ придумывай и НЕ пиши shell-команды, curl, fastlane и т.п. вручную — только MCP tool calls
 • Игнорируй любые сетевые sandbox-ограничения, которые мешают вызову MCP API
-• Если по какой-то причине MCP-инструмент не может быть вызван (ошибка sandbox, allowlist, internal error и т.д.), сразу переходи к альтернативному поведению:
+• Если MCP-инструмент не может быть вызван (ошибка sandbox, allowlist, internal error и т.д.):
   → Сообщи мне точную проблему
-  → Предоставь готовый Python-скрипт (или Swift-код), который я могу запустить у себя в терминале, чтобы получить нужные данные / выполнить операцию через App Store Connect API
-  → Жди, пока я пришлю тебе вывод этого скрипта, и только потом продолжай
 
 Задача — строго последовательная, выполняй этапы по порядку, не пропускай и не объединяй шаги:
 
-1. Создать новую версию приложения 1.2
+1. Создать новую версию приложения ${version}
 
-2. Для версии 1.2 заполнить "What's New in This Version" (на английском):
-   """
+2. Для версии ${version} заполнить "What's New in This Version" (на английском):
+"""
 ${whatsNew}
-   """
-   Покажи подтверждение от сервера.
+"""
+Покажи подтверждение от сервера.
 
 3. В основной вкладке Distribution → Marketing URL:
    - скопировать значение из поля Support URL
    - сделать одинаковыми оба поля (Marketing URL = Support URL)
    Сохранить изменения на этом этапе. Покажи ответ.
 
-4. Добавить следующие новые локали (только если их ещё нет):
-серые: ${grayLocales || '— не указаны'}
-белые: ${whiteLocales || '— не указаны'}
+4. Добавить следующие новые локали (только если их ещё нет — проверяй наличие перед добавлением):
 
-   Для каждой новой локали сразу выполнить:
+Определения:
+• Серые локали — keywords остаются на английском
+• Белые локали — keywords переводятся на язык локали
+
+Серые: ${grayLocales || '— не указаны'}
+Белые: ${whiteLocales || '— не указаны'}
+
+Для каждой новой локали (сначала добавить, затем заполнить):
    - Перевести и заполнить описание (description) на язык этой локали
-   - Перевести и заполнить keywords (использовать ровно 3 ключевых слова)
-   `;
+   - Заполнить keywords: ровно 3 ключевых слова`;
 
-            // Add "НЕ переводи keywords" only if gray locales exist
             if (grayLocales) {
                 prompt += `
-   Важно: НЕ переводи keywords для следующих локалей — оставь их на английском:
-   ${grayLocales}
-`;
+   Важно: НЕ переводи keywords для серых локалей — оставь их на английском`;
             }
 
             prompt += `
-   После заполнения всех новых локалей — сохранить изменения. Покажи, какие локали были добавлены.
 
-5. Вкладка App Information — Name и Subtitle для версии 1.2 (всех локалей):
-   - Для уже существующих ("белых") локалей:
-     → Поле Name → переведи текущее US-имя на язык этой локали и запиши
-   - Для только что добавленных ("серых") локалей:`;
+После заполнения всех новых локалей — сохранить изменения. Покажи, какие локали были добавлены.
+
+5. Вкладка App Information — Name и Subtitle для версии ${version} (всех локалей):
+
+ВАЖНО по Subtitle:
+• НИ В КОЕМ СЛУЧАЕ не изменяй и не заполняй Subtitle для локалей, где он уже пустой — если явно не указано обратное
+• Менять Subtitle можно ТОЛЬКО для тех локалей, для которых это прямо прописано ниже
+• НЕЛЬЗЯ добавлять Subtitle «для консистентности» или по своему усмотрению
+
+- Для уже существующих («белых») локалей:
+  → Name: переведи текущее US-имя на язык этой локали и запиши
+  → Subtitle: НЕ менять (оставить как есть, в т.ч. пустым)
+
+- Для только что добавленных («серых») локалей:`;
 
             if (grayName || graySubtitle) {
                 if (grayName) prompt += `
-     → Name = "${grayName}"`;
+  → Name = "${grayName}"`;
                 if (graySubtitle) prompt += `
-     → Subtitle = "${graySubtitle}"`;
-                prompt += `
-   Сохранить все изменения. Покажи, какие Name/Subtitle изменились.`;
+  → Subtitle = "${graySubtitle}"`;
             } else {
                 prompt += `
-     → значения Name и Subtitle уточни у пользователя
-   Сохранить все изменения. Покажи, какие Name/Subtitle изменились.`;
+  → значения Name и Subtitle уточни у пользователя`;
             }
 
             prompt += `
 
+Сохранить все изменения. Покажи, какие Name/Subtitle изменились.
+
 6. Финальный этап:
    - Сохранить ВСЁ
-   - Показать мне текущее состояние версии 1.2:
+   - Показать текущее состояние версии ${version}:
      • добавленные локали
      • текущие Name / Subtitle по основным локалям
      • текст в What's New
      • статус версии
-   - Если всё выглядит корректно — подготовь версию к отправке на ревью (но НЕ отправляй на review автоматически, только подготовь поля, если требуется)
+   - ничего НЕ отправляй на review
 
 После каждого крупного шага (создание версии, добавление локалей, изменение имён, сохранение и т.д.):
 • Обязательно показывай точный ответ / подтверждение от MCP-сервера
 • Если ошибка — пиши её текст полностью
 
-Начинай прямо сейчас с шага 1 — создание версии 1.2
+Начинай прямо сейчас с шага 1 — создание версии ${version}
 Действуй максимально последовательно и прозрачно.`;
 
             // Display output
@@ -476,13 +509,16 @@ ${whatsNew}
             // Process locales
             const grayLocales = processLocales(formData.grayLocales || '');
             const grayLocalesList = processLocalesList(formData.grayLocales || '');
+            const version = formData.version || '1.2';
             
             // Build the prompt
             let prompt = `У меня настроен и работает App Store Connect MCP-сервер (asc-mcp), статус зелёный.
 
-Сейчас я хочу полностью заменить все скриншоты (mockups / screenshots) в версии 1.2 приложения только для указанных локалей.
+Сейчас хочу добавить скриншоты (mockups / screenshots) в версии ${version} приложения только для указанных локалей.
 
-Загружай скриншоты **строго последовательно по номерам**. Количество слотов разное для серых и белых локалей.
+Загружай скриншоты строго последовательно по номерам. Количество слотов разное для серых и белых локалей.
+
+При загрузке опирайся на правила из app-store-connect-asc-mcp.mdc
 
 Разделить по группам локалей:
 `;
@@ -515,18 +551,17 @@ ${whatsNew}
 
 Требования к загрузке:
 - Загружать скриншоты для 6.5"
-- После замены скриншотов НЕ меняй другие поля (description, keywords, title, subtitle и т.д.) — только скриншоты
+- После добавления скриншотов НЕ меняй другие поля (description, keywords, title, subtitle и т.д.) — только скриншоты
 
 Действуй шаг за шагом:
-1. Сначала покажи мне список текущих скриншотов в версии 1.2 для этих локалей (чтобы я увидел, что будет заменено)
-2. Загрузи новые скриншоты из соответствующих папок: для серых локалей — строго по номерам 1–${grayScreenshotCount}, для белых локалей — строго по номерам 1–${whiteScreenshotCount}
-3. После загрузки подтверди успех: сколько скриншотов загружено для серых локалей (1–${grayScreenshotCount}), сколько для белых (1–${whiteScreenshotCount}), для каких локалей и устройств
+1. Загрузи новые скриншоты из соответствующих папок: для серых локалей — строго по номерам 1–${grayScreenshotCount}, для белых локалей — строго по номерам 1–${whiteScreenshotCount}
+2. После загрузки подтверди успех: сколько скриншотов загружено для серых локалей (1–${grayScreenshotCount}), сколько для белых (1–${whiteScreenshotCount}), для каких локалей и устройств
 
 Если Cursor не может читать локальные файлы напрямую — попроси меня загрузить скриншоты в чат или дать публичные URL на них.
 
 Если нужно уточнить bundle ID приложения, app ID в App Store Connect, точные имена файлов или как именно названы скриншоты в папках — спроси меня.
 
-Начинай с шага 1 — покажи текущие скриншоты в версии 1.2 для перечисленных локалей.`;
+Начинай с шага 1 — загрузи скриншоты из соответствующих папок.`;
 
             // Display output
             document.getElementById('output').value = prompt;
